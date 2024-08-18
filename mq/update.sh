@@ -25,15 +25,15 @@ docker network inspect my-network
 
 docker volume create --driver local \
 --opt type=nfs \
---opt o=addr=172.19.0.2,vers=4,hard,intr,rw \
+--opt o=addr=172.19.0.2,vers=4,hard,intr,rw,sync \
 --opt device=:/ \
 nfs-volume
 
 # Start MQ Server
-docker run -dt -e IS_ACTIVE_NODE=1 -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} --mount source=nfs-volume,target=/MQHA --name QM1-active my-docker-repository/mq-multi-instance
+docker run -dt --restart unless-stopped -e IS_ACTIVE_NODE=1 -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} --mount source=nfs-volume,target=/MQHA --name QM1-active my-docker-repository/mq-multi-instance
 # giving a small time to start active node
 sleep 3
-docker run -dt -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} --mount source=nfs-volume,target=/MQHA --name QM1-standby my-docker-repository/mq-multi-instance
+docker run -dt --restart unless-stopped -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} --mount source=nfs-volume,target=/MQHA --name QM1-standby my-docker-repository/mq-multi-instance
 docker network connect my-network QM1-active
 docker network connect my-network QM1-standby
 docker network inspect my-network
