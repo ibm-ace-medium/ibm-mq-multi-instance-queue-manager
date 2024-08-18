@@ -34,13 +34,13 @@ services:
     depends_on:
       nfs:
         condition: service_healthy
-        restart: true
     environment:
       - IS_ACTIVE_NODE=1
       - DATA_FILES_DIR_ENV=${DATA_FILES_DIR}
       - LOG_FILES_DIR_ENV=${LOG_FILES_DIR}
     volumes:
-      - qmgr-data:${QUEUE_MANAGER_DIR}
+#      - qmgr-data:${QUEUE_MANAGER_DIR}
+      - qmgr-data:/data
     networks:
       admin:
         ipv4_address: 10.0.11.20
@@ -59,9 +59,10 @@ services:
 
 volumes:
   qmgr-data:
+    driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=192.0.11.10,vers=4,hard,intr,rw"
+      o: "addr=192.0.11.10,vers=4,hard,intr,rw,sync"
       device: ":/"
 
 networks:

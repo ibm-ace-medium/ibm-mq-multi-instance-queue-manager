@@ -15,7 +15,7 @@ docker container rm nfs-server
 
 # clean external MQ files
 docker volume rm nfs-volume
-rm -rf /home/ivansla/Repositories/ibm-ace-medium/ibm-mq-multi-instance-queue-manager/data/nfs-storage/qmgrs/
+sudo rm -rf /home/ivansla/Repositories/ibm-ace-medium/ibm-mq-multi-instance-queue-manager/data/nfs-storage/qmgrs/
 
 
 # Start NFS Server
