@@ -28,10 +28,10 @@ clean() {
 
 buildImages() {
   # Build base image for all other images with necessary tools
-#  docker build --no-cache --tag=my-docker-repository/rhel-base ./rhel
+  docker build --no-cache --tag=my-docker-repository/rhel-base ./rhel
 
   # Build MQ base image
-#  docker build --no-cache --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
+  docker build --no-cache --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
 
   # Build MQ main image
   docker build --no-cache --tag=my-docker-repository/mq-multi-instance ./mq
