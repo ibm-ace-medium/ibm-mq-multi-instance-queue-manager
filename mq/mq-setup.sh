@@ -3,7 +3,7 @@
 install() {
   local qmgrName=$1
   local qmgrPort=$2
-  local mqExplorerGroup=$3
+  local mqAdminsGroup=$3
   local logFilesDirectory=$4
   local dataFilesDirectory=$5
 
@@ -19,8 +19,8 @@ install() {
   strmqm -x ${qmgrName}
 
   echo "Set authentication on Queue Manager."
-  setmqaut -m ${qmgrName} -t qmgr -g ${mqExplorerGroup} +connect +inq +dsp +chg
-  . /opt/mqm/samp/bin/amqauthg.sh ${qmgrName} ${mqExplorerGroup}
+  setmqaut -m ${qmgrName} -t qmgr -g ${mqAdminsGroup} +connect +inq +dsp +chg
+  . /opt/mqm/samp/bin/amqauthg.sh ${qmgrName} ${mqAdminsGroup}
 
   echo "Run mq-setup.mqsc file"
   runmqsc ${qmgrName} < /home/mqm/mq-setup.mqsc

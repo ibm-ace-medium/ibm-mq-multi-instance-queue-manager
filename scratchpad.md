@@ -28,3 +28,6 @@ docker volume create --driver local \
 --opt o=addr=172.19.0.3,vers=4,hard,intr,rw \
 --opt device=:/data \
 nfs-volume
+
+
+https://www.ibm.com/docs/en/ibm-mq/9.3?topic=managers-create-multi-instance-queue-manager
