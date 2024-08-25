@@ -2,6 +2,10 @@
 
 #NFS_STORAGE_PATH=/home/ivansla/Repositories/ibm-ace-medium/ibm-mq-multi-instance-queue-manager/data/nfs-storage
 NFS_STORAGE_PATH="update me"
+QUEUE_MANAGER_NAME="QMgr01"
+QUEUE_MANAGER_PORT="1414"
+MQ_ADMINS_GROUP="mqadmins"
+SLEEP_FOR_SECONDS=15
 
 MQ_FILE=9.3.5.0-IBM-MQ-Advanced-for-Developers-LinuxX64.tar.gz
 MQ_URL=https://public.dhe.ibm.com/ibmdl/export/pub/software/websphere/messaging/mqadv/${MQ_FILE}
@@ -14,7 +18,6 @@ MQ_URL=https://public.dhe.ibm.com/ibmdl/export/pub/software/websphere/messaging/
 QUEUE_MANAGER_DIR=/MQHA/qmgrs
 LOG_FILES_DIR=${QUEUE_MANAGER_DIR}/logs
 DATA_FILES_DIR=${QUEUE_MANAGER_DIR}/data
-SLEEP_FOR_SECONDS=15
 
 clean() {
   # Clean external MQ files. Sudo is required as I don't have mqm user on my host.
@@ -41,15 +44,19 @@ buildImages() {
   docker build --no-cache --tag=my-docker-repository/rhel-base ./rhel
 
   # Build MQ base image
-  docker build --no-cache --build-arg MQ_URL=${MQ_URL} --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
+  docker build --no-cache --build-arg MQ_URL=${MQ_URL} --build-arg MQ_ADMINS_GROUP=${MQ_ADMINS_GROUP} --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
 
   # Build MQ main image
   docker build --no-cache --tag=my-docker-repository/mq-multi-instance ./mq
 }
 
+createNetwork() {
+  docker network create my-network
+}
+
 startNfsServerAndCreateNfsVolume() {
   # Start NFS Server
-  docker run -itd --privileged --name nfs-server \
+  docker run -dt --restart unless-stopped --privileged --name nfs-server \
     -e SHARED_DIRECTORY=/data \
     -v ${NFS_STORAGE_PATH}:/data \
     itsthenetwork/nfs-server-alpine:12
@@ -57,6 +64,7 @@ startNfsServerAndCreateNfsVolume() {
   docker network connect my-network nfs-server
   docker network inspect my-network
 
+  # Extract the NFS Server container IP Address and pass it into volume creation
   nfsServerIpAddress=$(docker network inspect my-network | grep IPv4Address)
   extractedNfsServerIpAddress=$(echo "${nfsServerIpAddress}" | sed 's/^.*: \"//' | sed 's/\/.*//')
 
@@ -67,16 +75,16 @@ startNfsServerAndCreateNfsVolume() {
   nfs-volume
 }
 
-createNetwork() {
-  docker network create my-network
-}
-
 runActiveMqContainer() {
   # Start MQ Server Active Node
   docker run -dt --restart unless-stopped \
     -e IS_ACTIVE_NODE=1 \
     -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} \
     -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} \
+    -e QUEUE_MANAGER_NAME_ENV=${QUEUE_MANAGER_NAME} \
+    -e QUEUE_MANAGER_PORT_ENV=${QUEUE_MANAGER_PORT} \
+    -e MQ_ADMINS_GROUP_ENV=${MQ_ADMINS_GROUP} \
+    -e SLEEP_FOR_SECONDS_ENV=${SLEEP_FOR_SECONDS} \
     --mount source=nfs-volume,target=/MQHA \
     --name QM1-active my-docker-repository/mq-multi-instance
 
@@ -88,6 +96,10 @@ runStandbyMqContainer() {
   docker run -dt --restart unless-stopped \
     -e LOG_FILES_DIR_ENV=${LOG_FILES_DIR} \
     -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} \
+    -e DATA_FILES_DIR_ENV=${DATA_FILES_DIR} \
+    -e QUEUE_MANAGER_NAME_ENV=${QUEUE_MANAGER_NAME} \
+    -e QUEUE_MANAGER_PORT_ENV=${QUEUE_MANAGER_PORT} \
+    -e SLEEP_FOR_SECONDS_ENV=${SLEEP_FOR_SECONDS} \
     --mount source=nfs-volume,target=/MQHA \
     --name QM1-standby my-docker-repository/mq-multi-instance
 
