@@ -19,6 +19,7 @@ SLEEP_FOR_SECONDS=15
 clean() {
   # Clean external MQ files. Sudo is required as I don't have mqm user on my host.
   sudo rm -rf ${NFS_STORAGE_PATH}/qmgrs/
+  mkdir -p ${NFS_STORAGE_PATH}
 
   # Clean MQ SERVER
   docker container stop QM1-standby
