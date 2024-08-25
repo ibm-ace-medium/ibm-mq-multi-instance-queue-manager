@@ -1,6 +1,15 @@
 #!/bin/bash
 
-NFS_STORAGE_PATH=/home/ivansla/Repositories/ibm-ace-medium/ibm-mq-multi-instance-queue-manager/data/nfs-storage
+#NFS_STORAGE_PATH=/home/ivansla/Repositories/ibm-ace-medium/ibm-mq-multi-instance-queue-manager/data/nfs-storage
+NFS_STORAGE_PATH="update me"
+
+MQ_FILE=9.3.5.0-IBM-MQ-Advanced-for-Developers-LinuxX64.tar.gz
+MQ_URL=https://public.dhe.ibm.com/ibmdl/export/pub/software/websphere/messaging/mqadv/${MQ_FILE}
+
+# You can uncomment this line if you have the file on your local machine and can run http server with python.
+# In order to run http server, navigate to directory where you have MQ installation file and execute the command:
+# python3 -m http.server 9000
+# MQ_URL=http://replace_with_your_ip_address:9000/$MQ_FILE
 
 QUEUE_MANAGER_DIR=/MQHA/qmgrs
 LOG_FILES_DIR=${QUEUE_MANAGER_DIR}/logs
@@ -8,14 +17,14 @@ DATA_FILES_DIR=${QUEUE_MANAGER_DIR}/data
 SLEEP_FOR_SECONDS=15
 
 clean() {
-  # Clean external MQ files
+  # Clean external MQ files. Sudo is required as I don't have mqm user on my host.
   sudo rm -rf ${NFS_STORAGE_PATH}/qmgrs/
 
   # Clean MQ SERVER
-  docker container stop QM1-active
-  docker container rm QM1-active
   docker container stop QM1-standby
   docker container rm QM1-standby
+  docker container stop QM1-active
+  docker container rm QM1-active
 
   # Clean NFS SERVER
   docker container stop nfs-server
@@ -31,7 +40,7 @@ buildImages() {
   docker build --no-cache --tag=my-docker-repository/rhel-base ./rhel
 
   # Build MQ base image
-  docker build --no-cache --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
+  docker build --no-cache --build-arg MQ_URL=${MQ_URL} --tag=my-docker-repository/mq-install:9.3.5.0 ./mq/base
 
   # Build MQ main image
   docker build --no-cache --tag=my-docker-repository/mq-multi-instance ./mq
@@ -93,7 +102,7 @@ setupHA() {
   waitUntilConfigurationIsFinished
   runStandbyMqContainer
 
-  echo " All started."
+  echo "All started."
   exit 0
 }
 
@@ -104,6 +113,7 @@ waitUntilConfigurationIsFinished() {
     sleep ${SLEEP_FOR_SECONDS}
     echo -n "."
   done
+  echo ""
 }
 
 setupHA

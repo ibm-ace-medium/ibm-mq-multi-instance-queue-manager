@@ -1,17 +1,3 @@
-# expanded from deprecated repository: https://hub.docker.com/r/ibmcom/mq/
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 FROM my-docker-repository/rhel-base
 VOLUME /home
 
@@ -50,6 +36,7 @@ RUN  sed -i 's/SHELL=\/bin\/sh/SHELL=\/bin\/bash/g' /etc/default/useradd \
   && rm -rf /tmp/mq \
   && rm -rf /var/lib/apt/lists/*
 
+# setting process and file open limits
 RUN  echo "mqm             hard    nofile          10240" >> /etc/security/limits.conf
 RUN  echo "mqm             soft    nofile          10240" >> /etc/security/limits.conf
 RUN  echo "mqm             hard    nproc           30720" >> /etc/security/limits.conf
